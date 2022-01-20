@@ -5,6 +5,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -40,6 +41,9 @@ class _LocationAppState extends State<LocationApp> {
   final _streamSubscriptions = <dynamic>[];
 
   var locationMessage = "";
+  var locationName = "";
+  double longi = 0;
+  double lati = 0;
 
   void getCurrentLocation() async {
     var position = await Geolocator.getCurrentPosition(
@@ -49,9 +53,14 @@ class _LocationAppState extends State<LocationApp> {
     var lat = position.latitude;
     var long = position.longitude;
     print("$lat, $long");
+    List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
+    Placemark place = placemarks[0];
 
     setState(() {
       locationMessage = "$position";
+      longi = position.longitude;
+      lati = position.latitude;
+      locationName = "${place.locality}, ${place.postalCode}, ${place.country}";
     });
   }
 
@@ -69,44 +78,208 @@ class _LocationAppState extends State<LocationApp> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("GPS"),
+        title: Text("PoC Sensores Cross-Plataform"),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.location_on,
-              size: 46.0,
-              color: Colors.blue,
-            ),
-            SizedBox(
-              height: 10.0,
-            ),
-            Text(
-              "Get User Location",
-              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(
-              height: 20.0,
-            ),
-            Text("Position: $locationMessage"),
-            ElevatedButton(
-              onPressed: () {
-                getCurrentLocation();
-              },
-              child: Text("Get current location",
-                  style: TextStyle(color: Colors.white)),
-            ),
-            Text('Accelerometer: $accelerometer'),
-            Text('UserAccelerometer: $userAccelerometer'),
-            Text('Gyroscope: $gyroscope'),
-            Text('Magnetometer: $magnetometer')
-          ],
-        ),
+        child: (Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 100,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    // CARD LATITUDE E LONGITUDE
+                    Card(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      child: InkWell(
+                        splashColor: Colors.blue.withAlpha(30),
+                        onTap: () {
+                          debugPrint('Card tapped.');
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Coordenadas",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18),
+                                ),
+                                Text("Latitude: $longi"),
+                                Text("Longitude: $lati")
+                              ]),
+                        ),
+                      ),
+                    ),
+
+                    // CARD LOCALIZAÇÃO
+                    Card(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      child: InkWell(
+                        splashColor: Colors.blue.withAlpha(30),
+                        onTap: () {
+                          debugPrint('Card tapped.');
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Localização",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18),
+                                ),
+                                Text("$locationName"),
+                              ]),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(
+                height: 20,
+              ),
+              // BUTTON
+              ElevatedButton(
+                onPressed: () {
+                  getCurrentLocation();
+                },
+                style: ElevatedButton.styleFrom(
+                  elevation: 5,
+                ),
+                child: const Text("Verificar localização",
+                    style: TextStyle(color: Colors.white)),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+
+              // CARD Accelerometer
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                child: InkWell(
+                  splashColor: Colors.blue.withAlpha(30),
+                  onTap: () {
+                    debugPrint('Card tapped.');
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Acelerômetro",
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                          Text('Movimentação: $accelerometer'),
+                        ]),
+                  ),
+                ),
+              ),
+
+              // CARD UserAccelerometer
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                child: InkWell(
+                  splashColor: Colors.blue.withAlpha(30),
+                  onTap: () {
+                    debugPrint('Card tapped.');
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Acelerômetro",
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                          Text("Sem gravidade*"),
+                          Text('Movimentação: $userAccelerometer'),
+                        ]),
+                  ),
+                ),
+              ),
+
+              // CARD Gyroscope
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                child: InkWell(
+                  splashColor: Colors.blue.withAlpha(30),
+                  onTap: () {
+                    debugPrint('Card tapped.');
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Acelerômetro",
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                          Text('Gyroscope: $gyroscope'),
+                        ]),
+                  ),
+                ),
+              ),
+
+              // CARD Magnetometer
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                child: InkWell(
+                  splashColor: Colors.blue.withAlpha(30),
+                  onTap: () {
+                    debugPrint('Card tapped.');
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Acelerômetro",
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                          Text('Magnetometer: $magnetometer')
+                        ]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )),
       ),
-        
     );
   }
 
